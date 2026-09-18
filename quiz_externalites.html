@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz — Les externalités économiques</title>
+<style>
+  :root {
+    --navy: #1b2a5e;
+    --navy-dark: #131f47;
+    --orange: #e8811a;
+    --bg-light: #f3f5fb;
+    --card-bg: #ffffff;
+    --text-dark: #1b2a5e;
+    --text-muted: #6b7280;
+    --correct: #1f9d55;
+    --incorrect: #d93636;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg-light: #10162e;
+      --card-bg: #1b2447;
+      --text-dark: #f0f2fa;
+      --text-muted: #a9b1cf;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg-light: #10162e;
+    --card-bg: #1b2447;
+    --text-dark: #f0f2fa;
+    --text-muted: #a9b1cf;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg-light);
+    color: var(--text-dark);
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 640px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  header .eyebrow {
+    color: var(--orange);
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  header h1 {
+    font-size: 1.5rem;
+    margin: 0;
+    color: var(--text-dark);
+  }
+  header p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-top: 6px;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  }
+
+  /* --- Start screen --- */
+  .start-screen input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid #d5d9e6;
+    font-size: 1rem;
+    margin-top: 10px;
+    margin-bottom: 18px;
+    background: var(--bg-light);
+    color: var(--text-dark);
+  }
+  .start-screen label {
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  button.primary {
+    background: var(--orange);
+    color: white;
+    border: none;
+    padding: 13px 20px;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    transition: opacity 0.15s;
+  }
+  button.primary:hover { opacity: 0.9; }
+  button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* --- Progress --- */
+  .progress-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .progress-bar {
+    height: 6px;
+    background: #e3e7f3;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 18px;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--orange);
+    transition: width 0.3s ease;
+  }
+
+  /* --- Question --- */
+  .question-text {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 18px;
+    line-height: 1.4;
+  }
+
+  .option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: var(--bg-light);
+    border: 2px solid transparent;
+    border-radius: 10px;
+    padding: 13px 16px;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .option:hover:not(:disabled) {
+    border-color: var(--orange);
+  }
+  .option:disabled { cursor: default; }
+  .option.selected {
+    border-color: var(--orange);
+  }
+  .option.correct {
+    background: rgba(31,157,85,0.15);
+    border-color: var(--correct);
+    font-weight: 700;
+  }
+  .option.incorrect {
+    background: rgba(217,54,54,0.12);
+    border-color: var(--incorrect);
+    font-weight: 700;
+  }
+
+  .feedback {
+    margin-top: 14px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.correct-fb {
+    background: rgba(31,157,85,0.12);
+    border-left: 4px solid var(--correct);
+  }
+  .feedback.incorrect-fb {
+    background: rgba(217,54,54,0.1);
+    border-left: 4px solid var(--incorrect);
+  }
+  .feedback .verdict { font-weight: 700; display: block; margin-bottom: 4px; }
+
+  .next-btn {
+    margin-top: 18px;
+  }
+
+  /* --- Result screen --- */
+  .result-screen { text-align: center; }
+  .score-circle {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: var(--navy);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 10px auto 20px auto;
+  }
+  .score-circle .num {
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .score-circle .den {
+    font-size: 0.85rem;
+    opacity: 0.8;
+  }
+  .result-msg {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .result-sub {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 22px;
+  }
+
+  .name-tag {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  footer {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    margin-top: 18px;
+  }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <div class="eyebrow">CEJM · BTS NDRC</div>
+    <h1>Les externalités économiques</h1>
+    <p>Quiz de révision — 10 questions</p>
+  </header>
+
+  <div class="card">
+
+    <!-- START SCREEN -->
+    <div id="start-screen" class="start-screen">
+      <label for="student-name">Ton prénom / nom</label>
+      <input type="text" id="student-name" placeholder="Ex : Julie Martin" autocomplete="off">
+      <button class="primary" id="start-btn">Commencer le quiz</button>
+    </div>
+
+    <!-- QUIZ SCREEN -->
+    <div id="quiz-screen" class="hidden">
+      <div class="progress-wrap">
+        <span id="progress-label">Question 1 / 10</span>
+        <span id="score-label">Score : 0</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-bar-fill" id="progress-fill" style="width:10%;"></div>
+      </div>
+
+      <div class="question-text" id="question-text"></div>
+      <div id="options-container"></div>
+
+      <div class="feedback" id="feedback-box">
+        <span class="verdict" id="feedback-verdict"></span>
+        <span id="feedback-explanation"></span>
+      </div>
+
+      <button class="primary next-btn hidden" id="next-btn">Question suivante</button>
+    </div>
+
+    <!-- RESULT SCREEN -->
+    <div id="result-screen" class="result-screen hidden">
+      <div class="score-circle">
+        <div class="num" id="final-score">0</div>
+        <div class="den">/ 10</div>
+      </div>
+      <div class="result-msg" id="result-msg"></div>
+      <div class="result-sub" id="result-sub"></div>
+      <div class="name-tag" id="result-name"></div>
+      <button class="primary" id="restart-btn" style="margin-top:20px;">Recommencer</button>
+    </div>
+
+  </div>
+
+  <footer>Externalités économiques — BTS NDRC · CEJM</footer>
+</div>
+
+<script>
+const QUESTIONS = [
+  {
+    prompt: "Qu'est-ce qu'une externalité en économie ?",
+    options: [
+      "Un effet de l'action d'un agent sur un tiers, non compensé par un prix de marché",
+      "Une taxe imposée par l'État sur les entreprises polluantes",
+      "Un contrat entre deux agents économiques",
+      "Un indicateur de la croissance économique d'un pays"
+    ],
+    correct: 0,
+    explanation: "Une externalité désigne l'effet, positif ou négatif, de l'action d'un agent économique sur le bien-être d'un tiers, sans que cet effet soit voulu, payé ou compensé par un prix de marché."
+  },
+  {
+    prompt: "Quel économiste a formalisé la notion d'externalité ?",
+    options: ["Adam Smith", "Arthur C. Pigou", "John Maynard Keynes", "Ronald Coase"],
+    correct: 1,
+    explanation: "C'est l'économiste britannique Arthur C. Pigou qui a formalisé cette notion dans \"The Economics of Welfare\" (1920)."
+  },
+  {
+    prompt: "Que représente le coût (ou bénéfice) social ?",
+    options: [
+      "Uniquement ce que paie l'agent qui décide",
+      "Uniquement ce que subit le tiers",
+      "La somme du coût/bénéfice privé et du coût/bénéfice externe",
+      "Le prix fixé par l'État"
+    ],
+    correct: 2,
+    explanation: "Le coût (ou bénéfice) social correspond au coût (ou bénéfice) privé de l'agent A additionné au coût (ou bénéfice) externe subi (ou reçu) par le tiers C."
+  },
+  {
+    prompt: "Quelle est la conséquence d'une externalité négative sur le marché ?",
+    options: [
+      "Le bien est produit en quantité inférieure à l'optimum social",
+      "Le bien est produit en quantité supérieure à l'optimum social",
+      "Le prix de marché reflète parfaitement le coût réel",
+      "Aucun impact sur la quantité produite"
+    ],
+    correct: 1,
+    explanation: "Le prix de marché sous-estime le vrai coût de l'activité pour la société, ce qui conduit à une surproduction par rapport à l'optimum social."
+  },
+  {
+    prompt: "Lequel de ces exemples illustre une externalité négative ?",
+    options: ["La vaccination", "La recherche et innovation", "Les embouteillages", "L'éducation"],
+    correct: 2,
+    explanation: "Chaque automobiliste supplémentaire ralentit tous les autres usagers de la route, sans compensation : c'est une externalité négative."
+  },
+  {
+    prompt: "Pourquoi la vaccination est-elle un exemple d'externalité positive ?",
+    options: [
+      "Parce qu'elle coûte cher à l'État",
+      "Parce qu'elle protège aussi les personnes non vaccinées grâce à l'immunité collective",
+      "Parce qu'elle est obligatoire dans certains pays",
+      "Parce qu'elle est financée par des subventions"
+    ],
+    correct: 1,
+    explanation: "Se faire vacciner profite aussi aux personnes non vaccinées grâce à l'immunité collective : un bénéfice est offert à des tiers sans qu'ils aient à le payer."
+  },
+  {
+    prompt: "Quelle est la conséquence d'une externalité positive sur la production ?",
+    options: [
+      "Surproduction par rapport à l'optimum social",
+      "Sous-production par rapport à l'optimum social",
+      "Aucun effet sur la production",
+      "Une hausse automatique des prix"
+    ],
+    correct: 1,
+    explanation: "Le bénéfice externe n'étant pas rémunéré, l'agent produit moins que ce qui serait souhaitable pour la collectivité : on parle de sous-production."
+  },
+  {
+    prompt: "Pourquoi dit-on que les externalités représentent une défaillance de marché ?",
+    options: [
+      "Parce que le marché fixe les prix uniquement à partir des coûts et bénéfices privés",
+      "Parce que le marché est toujours faussé par l'État",
+      "Parce que les prix ne changent jamais",
+      "Parce que les entreprises fixent librement leurs prix"
+    ],
+    correct: 0,
+    explanation: "Le marché fixe les prix à partir des seuls coûts et bénéfices privés. Quand une externalité existe, ce prix devient un mauvais signal et conduit à produire trop ou pas assez par rapport à l'optimum social."
+  },
+  {
+    prompt: "Qu'est-ce qu'une taxe pigouvienne ?",
+    options: [
+      "Une subvention pour encourager la recherche",
+      "Une taxe qui renchérit une activité polluante à hauteur du coût externe",
+      "Un impôt sur le revenu des ménages",
+      "Une taxe sur les exportations"
+    ],
+    correct: 1,
+    explanation: "La taxe pigouvienne (ex. taxe carbone) renchérit l'activité polluante à hauteur du coût externe, pour faire payer celui qui cause l'externalité négative."
+  },
+  {
+    prompt: "Quel levier permet de créer un droit échangeable entre agents pour corriger une externalité (théorème de Coase) ?",
+    options: ["La réglementation", "La subvention", "Le marché de quotas / négociation", "La taxation"],
+    correct: 2,
+    explanation: "Le marché de quotas (ex. quotas carbone) crée un droit échangeable entre agents ou permet aux parties de négocier directement, conformément au théorème de Coase."
+  }
+];
+
+let currentIndex = 0;
+let score = 0;
+let studentName = "";
+let answered = false;
+
+const startScreen = document.getElementById('start-screen');
+const quizScreen = document.getElementById('quiz-screen');
+const resultScreen = document.getElementById('result-screen');
+const nameInput = document.getElementById('student-name');
+const startBtn = document.getElementById('start-btn');
+const nextBtn = document.getElementById('next-btn');
+const restartBtn = document.getElementById('restart-btn');
+
+startBtn.addEventListener('click', () => {
+  studentName = nameInput.value.trim();
+  startScreen.classList.add('hidden');
+  quizScreen.classList.remove('hidden');
+  renderQuestion();
+});
+
+restartBtn.addEventListener('click', () => {
+  currentIndex = 0;
+  score = 0;
+  answered = false;
+  resultScreen.classList.add('hidden');
+  startScreen.classList.remove('hidden');
+  nameInput.value = studentName;
+});
+
+nextBtn.addEventListener('click', () => {
+  currentIndex++;
+  if (currentIndex < QUESTIONS.length) {
+    renderQuestion();
+  } else {
+    showResult();
+  }
+});
+
+function renderQuestion() {
+  answered = false;
+  const q = QUESTIONS[currentIndex];
+  document.getElementById('progress-label').textContent = `Question ${currentIndex + 1} / ${QUESTIONS.length}`;
+  document.getElementById('score-label').textContent = `Score : ${score}`;
+  document.getElementById('progress-fill').style.width = `${((currentIndex) / QUESTIONS.length) * 100}%`;
+  document.getElementById('question-text').textContent = q.prompt;
+
+  const container = document.getElementById('options-container');
+  container.innerHTML = '';
+  q.options.forEach((optText, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.textContent = optText;
+    btn.addEventListener('click', () => selectAnswer(idx));
+    container.appendChild(btn);
+  });
+
+  document.getElementById('feedback-box').classList.remove('show', 'correct-fb', 'incorrect-fb');
+  nextBtn.classList.add('hidden');
+}
+
+function selectAnswer(idx) {
+  if (answered) return;
+  answered = true;
+  const q = QUESTIONS[currentIndex];
+  const options = document.querySelectorAll('.option');
+
+  options.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === q.correct) btn.classList.add('correct');
+    if (i === idx && idx !== q.correct) btn.classList.add('incorrect');
+  });
+
+  const feedbackBox = document.getElementById('feedback-box');
+  const verdict = document.getElementById('feedback-verdict');
+  const explanation = document.getElementById('feedback-explanation');
+
+  if (idx === q.correct) {
+    score++;
+    feedbackBox.classList.add('show', 'correct-fb');
+    verdict.textContent = "Bonne réponse !";
+  } else {
+    feedbackBox.classList.add('show', 'incorrect-fb');
+    verdict.textContent = "Pas tout à fait.";
+  }
+  explanation.textContent = q.explanation;
+  document.getElementById('score-label').textContent = `Score : ${score}`;
+
+  nextBtn.textContent = currentIndex === QUESTIONS.length - 1 ? "Voir mon score" : "Question suivante";
+  nextBtn.classList.remove('hidden');
+}
+
+function showResult() {
+  document.getElementById('progress-fill').style.width = '100%';
+  quizScreen.classList.add('hidden');
+  resultScreen.classList.remove('hidden');
+  document.getElementById('final-score').textContent = score;
+
+  let msg, sub;
+  const pct = score / QUESTIONS.length;
+  if (pct === 1) { msg = "Score parfait !"; sub = "Tu maîtrises parfaitement le chapitre sur les externalités."; }
+  else if (pct >= 0.7) { msg = "Très bon travail !"; sub = "Les notions clés sont acquises, relis juste les points ratés."; }
+  else if (pct >= 0.5) { msg = "Pas mal, mais peut mieux faire."; sub = "Reprends les définitions de coût privé / social."; }
+  else { msg = "À retravailler."; sub = "Relis le cours sur les externalités et retente le quiz."; }
+
+  document.getElementById('result-msg').textContent = msg;
+  document.getElementById('result-sub').textContent = sub;
+  document.getElementById('result-name').textContent = studentName ? `Résultat pour ${studentName}` : '';
+}
+</script>
+
+</body>
+</html>
